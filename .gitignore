@@ -1,1 +1,7 @@
 /.quarto/
+/_site/
+# popu_dataフォルダ内のCSVとExcelファイルを無視
+popu_data/*.csv
+popu_data/*.xls
+popu_data/*.xlsx
+.Rproj.user

@@ -4,6 +4,34 @@
     "href": "index.html",
     "title": "akirakawaguchi56.github.io",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+    "text": "このサイトではゼミの演習で制作したデータセットを公開していきます。"
+  },
+  {
+    "objectID": "population.html",
+    "href": "population.html",
+    "title": "人口について",
+    "section": "",
+    "text": "課題：e-statから都道府県別人口のデータを取得して全国に占める人口比率の増加率を可視化する\n何を可視化するのか忘れてしまった"
+  },
+  {
+    "objectID": "population.html#ページの目的",
+    "href": "population.html#ページの目的",
+    "title": "人口について",
+    "section": "",
+    "text": "課題：e-statから都道府県別人口のデータを取得して全国に占める人口比率の増加率を可視化する\n何を可視化するのか忘れてしまった"
+  },
+  {
+    "objectID": "population.html#running-code",
+    "href": "population.html#running-code",
+    "title": "人口について",
+    "section": "Running Code",
+    "text": "Running Code\nコードの手順\n\nデータを取ってくる1\n\n\nデータの整形\nggplot\n\nデータの読み込みは以下のページから各年のを取ってきました。 e-sataの人口推計\nライブラリの読み込み\n\nlibrary(readxl)\nlibrary(tidyverse)\n\nWarning: パッケージ 'tidyverse' はバージョン 4.4.1 の R の下で造られました\n\n\nWarning: パッケージ 'ggplot2' はバージョン 4.4.1 の R の下で造られました\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ ggplot2   3.5.1     ✔ tibble    3.2.1\n✔ lubridate 1.9.3     ✔ tidyr     1.3.1\n✔ purrr     1.0.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\nlibrary(lubridate)\n\n以下は実際の作図のコードです。見づらくてすみません。データはCSV形式(列指向形式・Shift-JIS)でダウンロードしました。\n\n#データの読み込み\n\npopulation95_99&lt;- read_excel(\"popu_data/05k3d-05.xls\")\n\nNew names:\n• `` -&gt; `...2`\n• `` -&gt; `...3`\n• `` -&gt; `...4`\n• `` -&gt; `...5`\n• `` -&gt; `...6`\n• `` -&gt; `...7`\n• `` -&gt; `...8`\n• `` -&gt; `...9`\n• `` -&gt; `...10`\n• `` -&gt; `...11`\n• `` -&gt; `...12`\n• `` -&gt; `...13`\n• `` -&gt; `...14`\n• `` -&gt; `...15`\n• `` -&gt; `...16`\n• `` -&gt; `...17`\n• `` -&gt; `...18`\n\npopulation00_04&lt;- read.csv(\"popu_data/FEH_00200524_250416132429.csv\",fileEncoding = \"Shift_JIS\")\n\npopulation05_09&lt;- read.csv(\"popu_data/FEH_00200524_250416132859.csv\",fileEncoding = \"Shift_JIS\")\npopulation10_14 &lt;- read.csv(\"popu_data/FEH_00200524_250416133015.csv\",fileEncoding = \"Shift_JIS\")\npopulation15_19 &lt;- read.csv(\"popu_data/FEH_00200524_250416133159.csv\",fileEncoding = \"Shift_JIS\")\n\npopulation20_24&lt;- read.csv(\"popu_data/FEH_00200524_250416133655.csv\",fileEncoding = \"Shift_JIS\")\n\n\n#データの加工\n#初めに同じ変数を持つデータを結合する\n#00~14,15~24はそれぞれ同じ変数の数なのでそれを縦に結合する\npopulation00_14 &lt;- bind_rows(population00_04,population05_09,population10_14)\n\npopulation15_24 &lt;- bind_rows(population15_19,population20_24)\n\n\n#これらをさらに結合するために、行の整理をして、その後結合する\n\n\n#名称の変更\npopulation00_14 &lt;- population00_14 |&gt; \nrename(resion=\"全国.都道府県\",gender=\"男女別\",allage=\"年齢5歳階級\",time=\"時間軸.年月日現在.\")\n\npopulation15_24 &lt;- population15_24 |&gt; \n  rename(resion=\"全国.都道府県\",gender=\"男女別\",allage=\"年齢5歳階級\",pop=\"人口\",time=\"時間軸.年月日現在.\")\n\n#行の抽出\npop00_14a &lt;- population00_14 |&gt;\n  filter(gender==\"男女計\"&allage==\"総数\")\n\n\n#15~24についても\npop15_24a &lt;- population15_24 |&gt;\n  filter(gender==\"男女計\",allage==\"総数\",pop==\"総人口\")\n#列の抽出\npop00_14b &lt;- pop00_14a |&gt; \n  select(\"gender\",\"allage\",\"resion\",\"time\",\"unit\",\"value\")\n\npop15_24b &lt;- pop15_24a |&gt; \n  select(\"gender\",\"allage\",\"resion\",\"time\",\"unit\",\"value\")\n\npop00_24 &lt;- bind_rows(pop00_14b,pop15_24b)\n#データのさらなる調整(日付や人口を計算しやすい数値にする)\npop00_24 &lt;- pop00_24 |&gt; \n  mutate(value=value*1000,time=ymd(time)) |&gt; \n  select(resion,time,value) \n#年だけにすしてnumericにする\npop00_24$time &lt;- format(pop00_24$time, \"%Y\") \npop00_24 &lt;-pop00_24 |&gt; \n  mutate(time=as.numeric(pop00_24$time))\n\n##95年から99年の加工(いらない行と列を消す)##\npop95_99 &lt;- population95_99 |&gt; select(-1,-2,-c(9:18)) |&gt; \n  slice(-c(1:11)) |&gt; slice(-c(49:51))\n#列名変更など\npop95_99[1,1] &lt;- \"全国\" \nnames(pop95_99)[c(1:6)] &lt;- c(\"resion\",1995,1996,1997,1998,1999)\n#データ型を変更\npop95_99[,2:6] &lt;- lapply(pop95_99[, 2:6], as.numeric)\n#数値をそろえる\npop95_99[,2:6] &lt;- pop95_99[,2:6]*1000 \n\n#結合するためにデータを縦にする\npop95_99long &lt;- pop95_99 |&gt; \n  pivot_longer(cols=\"1995\":\"1999\",\n                             names_to=\"time\",\n                             values_to = \"value\")\n#年データをdateにして結合する\npop95_99long &lt;-   pop95_99long |&gt; \n  mutate(time=as.numeric(time))\npop &lt;- bind_rows(pop00_24,pop95_99long)\n#空白を消す\nlibrary(stringr)\npop &lt;- pop |&gt; \n  mutate(resion=str_trim(pop$resion))\n#各年各都道府県の人口比率を出す\njapan&lt;- pop |&gt; \n  filter(resion==\"全国\")\npop_up &lt;- merge(pop,japan,by=\"time\")\npop_up &lt;- pop_up |&gt; \n  mutate(rperj=value.x/value.y)\n\n最後に連鎖式で計算したものを表示します\n\n#年別人口増加率を連鎖式で計算\n\npopchange &lt;- pop_up |&gt; \n  select(-resion.y) |&gt; \n  rename(resion=resion.x,eachpop=value.x)|&gt; \n  arrange(resion, time) |&gt;   # 都道府県と年でソート\n  group_by(resion) |&gt;     # 都道府県ごとにグループ化\n  mutate(change_rate = (rperj - lag(rperj)) / lag(rperj)) |&gt; \n  ungroup() \nView(popchange)\n\n最後にggplotです。山形県と東京を比較しました。\n\n##gglotの出番##\npopchange %&gt;% filter(resion %in% c(\"山形県\", \"東京都\")) |&gt; \nggplot() +\n  geom_line(aes(x = time, y = change_rate, color = resion)) +\n  scale_x_continuous(\n    breaks = seq(1995, 2024, by = 2))+\n  labs(x = \"年\", y = \"人口比率の変化率\", color = \"都道府県\") +\n  theme_minimal()\n\nWarning: Removed 2 rows containing missing values or values outside the scale range\n(`geom_line()`)."
+  },
+  {
+    "objectID": "population.html#footnotes",
+    "href": "population.html#footnotes",
+    "title": "人口について",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nAPIを使おうとしたが、普通にダウンロードした方が早かった↩︎"
   }
 ]
